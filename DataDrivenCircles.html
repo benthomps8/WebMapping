@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <title>University of Oregon Mapping</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v3.20.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v3.20.0/mapbox-gl.js'></script>
+    
+
+
+    
+ // CSS Styling
+    <style>
+          body { margin:0; padding:0; }
+          #map { position:absolute; top:0; bottom:0; width:100%; }
+          #banner { z-index: 9999; 
+          background-color:grey; 
+          opacity: 70%; 
+          text-align: center 
+          }
+
+    </style>
+
+  </head>
+
+  // Map Div and Initialization
+  <body>
+    <div id='map'></div>
+
+    // Title
+    <div id='banner'>
+     		<h1>Ben Thompson's Map Earthquakes</h1>
+     		<h2>Source: Mapbox</h2>
+ 	  </div>
+
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYnRob21wczgiLCJhIjoiY21uaHlrNDQ3MDd6cjJwcG1rbWl2Nmx6byJ9.I4pRWVR8drOh6bT7FUl4UA'
+ 
+   
+        // Map Initialization
+        var map = new mapboxgl.Map({
+          container: 'map', // id map div
+          style: 'mapbox://styles/bthomps8/cmohipq9v002201ss46ch5258', // stylesheet location (Data Driven Circles)
+          center: [-123.3933, 20], // Approximate Center of Pacific Ocean
+          zoom: 2 // Most land visible, without being too zoomed out 
+        });
+   
+
+        // Add Zoom feature
+        map.addControl(new mapboxgl.NavigationControl({
+        showCompass: false
+        }), 'bottom-left')
+        
+    </script>
+
+  </body>
+
+</html>
