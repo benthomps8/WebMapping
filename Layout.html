@@ -1,0 +1,508 @@
+<!-- A Versatile Layout for Full-screen Maps by Andy Cochran
+Andy Cochran 
+From https://medium.com/nyc-planning-digital/a-versatile-layout-for-full-screen-maps-229cec508b22 -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Hello World</title>
+
+    
+    <!-- JavaScript Libraries-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.4.3/js/foundation.js"></script>
+
+  
+    <!-- CSS Links -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.4.3/css/foundation.min.css" rel="stylesheet" />
+    <link href="VersitileLayout.css" rel="stylesheet" />
+
+     <!-- Mapbox Links-->
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css' rel='stylesheet' />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Lobster+Two:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+
+    </style>
+
+
+
+    
+</head>
+
+<body>
+
+    <div class="site-header">
+        <strong class="site-title">My Mapping Application</strong>
+    </div>
+
+    <div class="site-main grid-x has-content-open">
+
+        <div class="search-container cell medium-3 large-2">
+            <input type="text" placeholder="Search..." class="search" />
+            <ul class="search-results no-bullet">
+                <li>Search Result 1</li>
+                <li>Search Result 2</li>
+                <li>Search Result 3</li>
+            </ul>
+        </div>
+        
+
+
+        <div class="map-container cell medium-auto large-order-2">
+        
+            <!-- Map Div (No iFrame)-->
+            <div id="map"></div>
+
+            <div id="layer-controls">
+                <label><input type="checkbox" id="ancientToggle" checked> Ancient Wonders</label>
+                <label><input type="checkbox" id="modernToggle" checked> Modern Wonders</label>
+            </div>
+
+        </div>
+
+        <!--  Sidebar panel  -->
+        <div class="sidebar cell medium-3 large-2 large-order-1 show-for-medium">
+            <h5>Sidebar</h5>
+            <div id="sidebar-content">
+        <p>Click a marker to see details here.</p>
+    </div>
+
+            <hr />
+
+        </div>
+
+        <div class="content-close-button-container">
+            <a href="#" class="content-close-button">×</a>
+        </div>
+        
+        <!--  Content panel  -->
+        <div class="content cell large-5 large-order-3">
+            <h2>Content</h2>
+            <p>The exact history of the term "Seven Wonders of the World" is somewhat confusing. The earliest known reference to these seven ancient wonders (as we know them today) was in a list written by the epigrammist Antipater of Sidon, likely before 100 BC. It goes:</p>
+            <p><strong>"I have gazed on the walls of impregnable Babylon along which chariots may race, and on the Zeus by the banks of the Alpheus, I have seen the hanging gardens, and the Colossus of the Helios, the great man-made mountains of the lofty pyramids, and the gigantic tomb of Mausolus; but when I saw the sacred house of Artemis that towers to the clouds, the others were placed in the shade, for the sun himself has never looked upon its equal outside Olympus."</strong></p>
+            <p>As we see, this list contains 6/7 of what we now consider the seven ancient wonders, but substituted the Lighthouse of Alexandria for the walls of Babylon. Over the coming centuries, several similar lists would appear, all with different "wonders" or "sights" listed. Some other notable landmarks that were at one point considered included Cyrus' Palace, the Cyzicus Temple, and the Heraclea Temple. The exact list that we have today was developed in a 1572 publication Octo Mundi Miracula, which drew from a variety of historical sources. </p>
+            <p>The seven ancient wonders were all magnificent works that displayed humanity's creativity and abilities. However, there were two main issues. For one, the list was centered on a very specific part of the world. We can see that all seven were either in Greece, Turkey, Iraq, or Egypt. This meant that other notable structures from Asia, southern Africa, or the Americas were omitted. Additionally, by the time the official list was crafted in the 16th century, most of the wonders no longer stood. Historians don't even have a very solid understanding of what the Hanging Gardens looked like, for example.</p>
+            <p>With these issues in mind, a vote was held in 2007 to determine the seven "modern" wonders of the world. The poll was held by a private Swiss foundation, and it garnered over 100 million votes. The new list was much more representative of the entire world, and every structure on the list is also still standing, which makes it much more interesting for tourists. However, the new list was still criticized for being unscientific and biased. Critics argue that the list was too heavily influenced by internet votes, omitting structures such as Angkor Wat in Cambodia, a country which, at the time, did not have widely available internet like many of these other countries.</p>
+            <p>At the end of the day, it is important to remember that these seven ancient wonders, and the seven modern wonders, are simply a fun way to recognize some of humanity's great significance. The lists are in no way trying to determine the seven greatest feats of engineering, or the seven most culturally significant places in human history, or anything like that. With that being said, it is still cool to have a list of locations like this that we can map!</p>
+        </div>
+
+    </div>
+
+    <script>
+       
+        $(document).ready(function() {
+
+            $('.content-close-button').click(function() {
+                $('.content-close-button').hide();
+                $('.content').hide();
+                $('.site-main').removeClass('has-content-open')
+
+                // When the map is resized programmatically, window resize must be triggered so that the map renders in the newly allotted space.
+                map.resize();
+
+            });
+
+            $('.content-link').click(function() {
+                $('.content-close-button').show();
+                $('.content').show();
+                $('.site-main').addClass('has-content-open')
+                map.resize();
+            });
+
+        });
+    </script>
+
+<script>
+
+mapboxgl.accessToken = 'pk.eyJ1Ijoiam9tZXJzb24iLCJhIjoiY2o1bXE2bHlyMnJhZDMzbnpyMnhlODdpcSJ9.QJMJ_cTFCY050aZfSn1umQ';
+
+var map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/light-v11',
+    center: [-122.6788, 45.5212],
+    zoom: 2
+});
+
+
+// GREAT WALL OF CHINA
+        var popup1_content = '<h2>The Great Wall of China</h2>'; 
+        popup1_content += '<img class="popupImage" alt="The Great Wall of China" src="https://th.bing.com/th/id/R.ad3c97351058149ae7fa5612affc1ec3?rik=vTP0J%2foOuUXbWg&riu=http%3a%2f%2fwww.thehistoryhub.com%2fwp-content%2fuploads%2f2014%2f05%2fGreat-Wall-of-China-Images.jpg&ehk=0LFSHTy5KA7wRJR92rh4DbH%2fChPmffrPKTif4B6oi3s%3d&risl=&pid=ImgRaw&r=0">' ;
+        popup1_content += 'Icon Sourse: Icons8, <a href="https://icons8.com/">LINK</a>';
+        popup1_content += '<h3>The Great Wall of China is a series of walls spanning over 21,000 kilometers in China. Contrary to popular belief, the "wall" is not one single entity, but a combination of many smaller walls. The first of the walls were built in the 7th century BC in order to protect the Qin Dynasty from invaders.</h3><br>'
+        popup1_content += 'Source: Trafalgar, <a href="https://www.trafalgar.com/en-us/campaigns/worldwide-tours?&msclkid=8a4d9ce9bcda1be31275f6e56a89dcc5&utm_source=bing&utm_medium=cpc&utm_campaign=TT%20US%20%7C%20Bing%20%7C%20Brand%20%7C%20CONV%20%7C&utm_term=trafalgar%20travel&utm_content=Core&gclid=8a4d9ce9bcda1be31275f6e56a89dcc5&gclsrc=3p.ds&gad_source=7&gad_campaignid=19829256383">LINK</a>';
+        
+
+        var popup1 = new mapboxgl.Popup({ minWidth:'300px' })
+            .setHTML(popup1_content);
+
+// PETRA
+        var popup2_content = '<h2>Petra</h2>'; 
+        popup2_content += '<img class="popupImage" alt="City of Petra in Jordan" src="https://cdn.britannica.com/24/153524-050-BA9D084B/Al-Dayr-Petra-Jordan.jpg">' ;
+        popup2_content += 'Icon Sourse: Icons8, <a href="https://icons8.com/">LINK</a>';
+        popup2_content += '<h3>Petra is an ancient city in modern day Jordan. This city became the capital of the Nabataean Kingdom in the second century BC and eventually became a great trade hub. By 363 AD, the city was almost completely destroyed by earthquakes and Roman invasion, but was rediscovered by a Swiss traveller in 1812.</h3><br>';
+        popup2_content += 'Source: Brittanica, <a href="https://www.britannica.com/place/Petra-ancient-city-Jordan">LINK</a>';
+        
+
+        var popup2 = new mapboxgl.Popup({ minWidth:'300px' })
+            .setHTML(popup2_content);
+
+// CHICHEN ITZA 
+        var popup3_content = '<h2>Chichén Itzá</h2>'; 
+        popup3_content += '<img class="popupImage" alt="Chichén Itzá" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Chichen_Itza_3.jpg/1280px-Chichen_Itza_3.jpg">' ;
+        popup3_content += 'Icon Sourse: Icons8, <a href="https://icons8.com/">LINK</a>';
+        popup3_content += '<h3>Chichén Itzá was a city built by the Mayans starting around 450 AD. It thrived as a trade hub and agricultural center until the 13th century, and was eventually conquered by the Spanish in the 1520s. The most notable landmark of the city is El Castillo, a pyramid-looking temple at the center of the site. </h3><br>';
+        popup3_content += 'Source: Wikipedia, <a href="https://www.google.com/url?sa=t&source=web&rct=j&url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FChichen_Itza&ved=0CAMQjB1qFwoTCJDX-tmpxpQDFQAAAAAdAAAAABAF&opi=89978449">LINK</a>';
+        
+
+        var popup3 = new mapboxgl.Popup({ minWidth:'300px' })
+            .setHTML(popup3_content);
+
+// CHRIST THE REDEEMER
+        var popup4_content = '<h2>Christ the Redeemer</h2>'; 
+        popup4_content += '<img class="popupImage" alt="Christ the Redeemer" src="https://cruxnow.com/cdn-cgi/image/width=1920,quality=75/https://wp.cruxnow.com/wp-content/uploads/2021/09/humped-5404701_1280.jpg">' ;
+        popup4_content += 'Icon Sourse: Icons8, <a href="https://icons8.com/">LINK</a>';
+        popup4_content += '<h3>Christ the Redeemer is a statue overlooking Brazil at a height of about 30 meters and with a wingspan of about 28. It was constructed between 1922 and 1931, with the hope of restoring religious faith and acting as a beacon of hope for the people of Brazil.</h3><br>';
+        popup4_content += 'Source: Crux, <a href="https://www.google.com/url?sa=t&source=web&rct=j&url=https%3A%2F%2Fcruxnow.com%2Fchurch-in-the-americas%2F2021%2F09%2Fchurch-and-state-battle-in-brazil-over-access-to-christ-the-redeemer-statue&ved=0CAMQjB1qFwoTCMCk_qGqxpQDFQAAAAAdAAAAABAb&opi=89978449">LINK</a>';
+        
+
+        var popup4 = new mapboxgl.Popup({ minWidth:'300px' })
+            .setHTML(popup4_content);
+
+// MACHU PICCHU
+        var popup5_content = '<h2>Machu Picchu</h2>';
+        popup5_content += '<img class="popupImage" alt="A Llama looking over Macchu Picchu" src="https://cuscoperu.b-cdn.net/wp-content/uploads/2024/06/Llama-en-Machu-Picchu-pc.jpg">' ;
+        popup5_content += 'Icon Sourse: Icons8, <a href="https://icons8.com/">LINK</a>';
+        popup5_content += '<h3>Built around 1450 AD, Machu Picchu served as a Citadel for the Inca people. It was only inhabited for around 100 years before being abandoned, likely during the Spanish conquests.</h3><br>';
+        popup5_content += 'Source: CuscoPeru, <a href="https://www.google.com/url?sa=t&source=web&rct=j&url=https%3A%2F%2Fwww.cuscoperu.com%2Fen%2Ftravel%2Fmachu-picchu%2Fcitadel-of-machu-picchu%2F&ved=0CAMQjB1qFwoTCPD-1uWrxpQDFQAAAAAdAAAAABA7&opi=89978449">LINK</a>';
+        
+
+        var popup5 = new mapboxgl.Popup({ minWidth:'300px' })
+            .setHTML(popup5_content);
+
+// COLOSSEUM
+        var popup6_content = '<h2>Colosseum</h2>'; 
+        popup6_content += '<img class="popupImage" alt="The Roman Colosseum" src="https://cdn.mos.cms.futurecdn.net/BiNbcY5fXy9Lra47jqHKGK-1920-80.jpg">' ;
+        popup6_content += 'Icon Sourse: Icons8, <a href="https://icons8.com/">LINK</a>';
+        popup6_content += '<h3>The Colosseum is the largest standing amphitheater in the entire world. Construction began around 69 AD, and was completed around 80 AD by Roman emperor Titus. It is built primarily of limestone, tuff and concrete, and can hold around 80,000 spectators. It was used for gladiator battles, but also re-enactments and dramas</h3><br>';
+        popup6_content += 'Source: Live Science, <a href="https://www.google.com/url?sa=t&source=web&rct=j&url=https%3A%2F%2Fwww.livescience.com%2Froman-colosseum&ved=0CAMQjB1qFwoTCJjg19-sxpQDFQAAAAAdAAAAABAF&opi=89978449">LINK</a>';
+        
+
+        var popup6 = new mapboxgl.Popup({ minWidth:'300px' })
+            .setHTML(popup6_content);
+
+// TAJ MAHAL
+        var popup7_content = '<h2>Taj Mahal</h2>'; 
+        popup7_content += '<img class="popupImage" alt="The Taj Mahal" src="https://media.architecturaldigest.com/photos/67acb9b0339bcbaaadeb91b5/1:1/w_4000,h_4000,c_limit/GettyImages-873536102.jpg">' ;
+        popup7_content += 'Icon Sourse: Icons8, <a href="https://icons8.com/">LINK</a>';
+        popup7_content += '<h3>The Taj Mahal was built as a tomb for the deceased wife of emperor Shah Jahan, and was comissioned in 1631. The complex now contains a mosque, a guesthouse, and a set of gardens. </h3><br>';
+        popup7_content += 'Source: Architectural Digest, <a href="https://www.google.com/url?sa=t&source=web&rct=j&url=https%3A%2F%2Fwww.architecturaldigest.com%2Fstory%2Fthe-taj-mahal-everything-you-need-to-know&ved=0CAMQjB1qFwoTCPCjwKutxpQDFQAAAAAdAAAAABAF&opi=89978449">LINK</a>';
+        
+
+        var popup7 = new mapboxgl.Popup({ minWidth:'300px' })
+            .setHTML(popup7_content);
+
+// ANCIENT WONDERS //
+
+// PYRAMID
+        var popup8_content = '<h2>Great Pyramid of Giza</h2>'; 
+        popup8_content += '<img class="popupImage" alt="The Pyramids at Giza" src="https://th-thumbnailer.cdn-si-edu.com/QzDH_NafC-MkKm2lIIJxwRfby9Y=/fit-in/1200x0/https://tf-cmsv2-smithsonianmag-media.s3.amazonaws.com/filer/lifelist-giza-631.jpg">' ;
+        popup8_content += 'Icon Sourse: Icons8, <a href="https://icons8.com/">LINK</a>';
+        popup8_content += '<h3>The Great Pyramid of Giza is not only the oldest of the seven ancient wonders, but also the only one still remaining mostly intact. It was built around 2600 BC as a tomb for the Pharoah Khufu and took about 26 years to complete. It stands at over 481 feet, and was the tallest human structure for over 3,700 years before the construction of the Lincoln Cathedral.</h3><br>';
+        popup8_content += 'Source: Smithsonian Magazine, <a href="https://www.google.com/url?sa=t&source=web&rct=j&url=https%3A%2F%2Fwww.smithsonianmag.com%2Ftravel%2Fponder-the-pyramids-of-giza-11138893%2F&ved=0CAMQjB1qFwoTCIiDv7muxpQDFQAAAAAdAAAAABAF&opi=89978449">LINK</a>';
+        
+
+        var popup8 = new mapboxgl.Popup({ minWidth:'300px' })
+            .setHTML(popup8_content);
+
+// HANGING GARDENS OF BABYLON
+        var popup9_content = '<h2>Hanging Gardens of Babylon</h2>'; 
+        popup9_content += '<img class="popupImage" alt="Depiction of the Hanging Gardens of Babylon" src="https://d2kihw5e8drjh5.cloudfront.net/eyJidWNrZXQiOiJ1dGEtaW1hZ2VzIiwia2V5IjoicGxhY2VfaW1nLy13X2I3N28zU01XSDgyY0x0dUdwTGciLCJlZGl0cyI6eyJyZXNpemUiOnsid2lkdGgiOjY0MCwiaGVpZ2h0Ijo2NDAsImZpdCI6Imluc2lkZSJ9LCJyb3RhdGUiOm51bGwsInRvRm9ybWF0IjogIndlYnAifX0=">' ;
+        popup9_content += 'Icon Sourse: Icons8, <a href="https://icons8.com/">LINK</a>';
+        popup9_content += '<h3>Than Hanging Gardens of Babylon no longer exist, but they were said to have been a remarkable feat of engineering, with tiered gardens containing lots of plants and trees. We do not know exactly where they were located, but we are confident they exist because of Greek and Roman texts describing them. These texts hint that they mayhave been built by Nebuchadnezzar II in the 6th century BC, around the same time and place as the book of Daniel.</h3><br>';
+        popup9_content += 'Source: Wanderboat, <a href="https://www.google.com/url?sa=t&source=web&rct=j&url=https%3A%2F%2Fwanderboat.ai%2Fattractions%2Firaq%2Fal-hillah-central-subdistrict%2Fremains-of-the-hanging-gardens-of-babylon%2FxrKIs7QUQgyoSbN8Szj4Yg&ved=0CAMQjB1qFwoTCKiZjZ6vxpQDFQAAAAAdAAAAABA2&opi=89978449">LINK</a>';
+        
+
+        var popup9 = new mapboxgl.Popup({ minWidth:'300px' })
+            .setHTML(popup9_content);
+
+// STATUE OF ZEUS AT OLYMPIA
+        var popup10_content = '<h2>Statue of Zeus at Olympia</h2>';
+        popup10_content += '<img class="popupImage" alt="Depiction of the Statue of Zeus" src="https://upload.wikimedia.org/wikipedia/commons/6/66/Le_Jupiter_Olympien_ou_l%27art_de_la_sculpture_antique.jpg">' ;
+        popup10_content += 'Icon Sourse: Icons8, <a href="https://icons8.com/">LINK</a>';
+        popup10_content += '<h3>The Statue of Zeus at Olympia was a giant statue of a seated Zeus, built around 435 BC in Olympia. It was built of ivory plates and gold panels, and was lost and destroyed by then end of the 6th century AD, possibly by the great fire of the Palace of Lausus.</h3><br>'; 
+        popup10_content += 'Source: Wikipedia, <a href="https://www.google.com/url?sa=t&source=web&rct=j&url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FStatue_of_Zeus_at_Olympia&ved=0CAMQjB1qFwoTCMC7po6wxpQDFQAAAAAdAAAAABAg&opi=89978449">LINK</a>';
+        
+
+        var popup10 = new mapboxgl.Popup({ minWidth:'300px' })
+            .setHTML(popup10_content);
+
+// TEMPLE OF ARTEMIS
+        var popup11_content = '<h2>Temple of Artemis</h2>'; 
+        popup11_content += '<img class="popupImage" alt="Depiction of the Temple of Artemis" src="https://drivethruhistoryadventures.com/wp-content/uploads/2018/07/3_Temple-of-Artemis-A11.jpg">' ;
+        popup11_content += 'Icon Sourse: Icons8, <a href="https://icons8.com/">LINK</a>';
+        popup11_content += '<h3>The Temple of Artemis was a temple dedicated to the Greek Goddess of hunting and the wilderness. It was used as a religious place of worship, but also a cultural hub with banks and festivals. It was destroyed and rebuilt multiple times before finally being completely destroyed in 401 AD. </h3><br>';
+        popup11_content += 'Source: Drive Thru History, <a href="https://www.google.com/url?sa=t&source=web&rct=j&url=https%3A%2F%2Fdrivethruhistoryadventures.com%2Fthe-temple-of-artemis-at-ephesus%2F&ved=0CAMQjB1qFwoTCJjYu_mwxpQDFQAAAAAdAAAAABAg&opi=89978449">LINK</a>';
+        
+
+        var popup11 = new mapboxgl.Popup({ minWidth:'300px' })
+            .setHTML(popup11_content);
+
+// MAUSOLEUM AT HALICARNASSUS
+        var popup12_content = '<h2>Mausoleum at Halicarnassus</h2>'; 
+        popup12_content += '<img class="popupImage" alt="Depiction of the Mausoleum at Halicarnassus" src="https://www.worldhistory.org/uploads/images/12902.png">' ;
+        popup12_content += 'Icon Sourse: Icons8, <a href="https://icons8.com/">LINK</a>';
+        popup12_content += '<h3>Also known as the Tomb of Mausolus, the Mausoleum at Halicarnassus was a tomb built around 350 BC for Mausolus, a king of Caria. It was completely destroyed by earthquakes by the 15th century AD< but was the last standing ancient wonder besides the Pyramid of Giza. </h3><br>';
+        popup12_content += 'Source: World History Encyclopedia, <a href="https://www.google.com/url?sa=t&source=web&rct=j&url=https%3A%2F%2Fwww.worldhistory.org%2FMausoleum_at_Halicarnassus%2F&ved=0CAMQjB1qFwoTCODByorv15QDFQAAAAAdAAAAABAF&opi=89978449">LINK</a>';
+        
+
+        var popup12 = new mapboxgl.Popup({ minWidth:'300px' })
+            .setHTML(popup12_content);
+
+// LIGHTHOUSE OF ALEXANDRIA
+        var popup13_content = '<h2>Lighthouse of Alexandria</h2>'; 
+        popup13_content += '<img class="popupImage" alt="Depiction of the Lighthouse of Alexandria" src="https://cdn.britannica.com/07/172307-050-4D3BA855/Pharos-Alexandria.jpg">' ;
+        popup13_content += 'Icon Sourse: Icons8, <a href="https://icons8.com/">LINK</a>';
+        popup13_content += '<h3>This lighthouse was built by the Ancient Egyptians around 280 BC, and was likely around 330 feet tall. Much like the Mausoleum, it was destroyed by earthquakes and likely stood no later than 1300 AD. In 2025, some stones from the entrance were actually resurfaced thanks to a digital reconstruction effort. </h3><br>';
+        popup13_content += 'Source: Britannica, <a href="https://www.google.com/url?sa=t&source=web&rct=j&url=https%3A%2F%2Fwww.britannica.com%2Ftopic%2Flighthouse-of-Alexandria&ved=0CAMQjB1qFwoTCIjbwLnw15QDFQAAAAAdAAAAABAF&opi=89978449">LINK</a>';
+        
+
+        var popup13 = new mapboxgl.Popup({ minWidth:'300px' })
+            .setHTML(popup13_content);
+
+// COLOSSUS OF RHODES
+        var popup14_content = '<h2>Colossus at Rhodes</h2>';
+        popup14_content += '<img class="popupImage" alt="Depiction of Colossus of Rhodes" src="https://throneofhelios.com/wp-content/uploads/2020/11/colossus.jpg">' ;
+        popup14_content += 'Icon Sourse: Icons8, <a href="https://icons8.com/">LINK</a>';
+        popup14_content += '<h3>The Colossus of Rhodes was a statue of the Greek God of the sun Helios, built around 280 BC. It was built in celebration of the defense of Rhodes from the Macedonian leader Demetrius I. It likely stood around 108 feet high and was destroyed by the earthquake of 226 BC.</h3><br>'; 
+        popup14_content += 'Source: Throne of Helios, <a href="https://www.google.com/url?sa=t&source=web&rct=j&url=https%3A%2F%2Fthroneofhelios.com%2F2020%2F11%2F11%2Fcolossus-of-rhodes%2F&ved=0CAMQjB1qFwoTCOjM4-Dx15QDFQAAAAAdAAAAABBs&opi=89978449">LINK</a>';
+        
+        var popup14 = new mapboxgl.Popup({ minWidth:'300px' })
+            .setHTML(popup14_content);
+
+
+// CREATE CUSTOM MARKERS
+function createImageMarker(coords, htmlContent, imageURL, title) {
+
+    var el = document.createElement('div');
+    el.className = 'custom-marker';
+
+    el.style.backgroundImage = `url(${imageURL})`;
+    el.style.width = '40px';
+    el.style.height = '40px';
+    el.style.backgroundSize = 'cover';
+
+    var marker = new mapboxgl.Marker(el)
+        .setLngLat(coords)
+        .addTo(map);
+
+    // CLICK EVENT → send content to sidebar
+    el.addEventListener('click', function () {
+        document.getElementById('sidebar-content').innerHTML = htmlContent;
+    });
+
+    var tooltip = document.createElement('div');
+    tooltip.className = 'marker-tooltip';
+    tooltip.innerText = title;
+
+    el.addEventListener('mouseenter', () => {
+    el.appendChild(tooltip);
+    });
+
+    el.addEventListener('mouseleave', () => {
+        if (el.contains(tooltip)) {
+            el.removeChild(tooltip);
+        }
+});
+
+    return marker;
+}
+
+var ancientMarkers = [];
+var modernMarkers = [];
+
+// Marker 1 - Great Wall
+modernMarkers.push(
+    createImageMarker(
+        [116.5704, 40.4319],
+        popup1_content,
+        'https://img.icons8.com/?size=64&id=122712&format=png',
+        'Great Wall of China'
+    )
+);
+
+// Marker 2 - Petra
+modernMarkers.push(
+    createImageMarker(
+        [35.4444, 30.3285],
+        popup2_content,
+        'https://img.icons8.com/?size=80&id=BI0r2Mcyjd5e&format=png',
+        'Petra'
+    )
+);
+    
+
+// Marker 3 - Chichen Itza
+modernMarkers.push(
+    createImageMarker(
+        [-88.5678, 20.6843],
+        popup3_content,
+        'https://img.icons8.com/?size=48&id=vUKPLbzqHqOx&format=png',
+        'Chichen Itza'
+    )
+);
+
+// Marker 4 - Christ the Redeemer
+modernMarkers.push(
+    createImageMarker(
+        [-43.2105, -22.9519],
+        popup4_content,
+        'https://img.icons8.com/?size=80&id=bVQjsDUuN7SA&format=png',
+        'Christ the Redeemer'
+    )
+);
+
+// Marker 5 - Machu Picchu
+modernMarkers.push(
+    createImageMarker(
+        [-72.5450, -13.1631],
+        popup5_content,
+        'https://img.icons8.com/?size=80&id=Es0fakKBWVmD&format=png',
+        'Machu Picchu'
+    )
+);
+
+// Marker 6 - Colosseum
+modernMarkers.push(
+    createImageMarker(
+        [12.4922, 41.8902],
+        popup6_content,
+        'https://img.icons8.com/?size=40&id=40478&format=png',
+        'Colosseum'
+    )
+);
+
+// Marker 7 - Taj Mahal
+modernMarkers.push(
+    createImageMarker(
+        [78.0421, 27.1751],
+        popup7_content,
+        'https://img.icons8.com/?size=80&id=2hm6aIneKcco&format=png',
+        'Taj Mahal'
+    )
+);
+
+// Marker 8 - Pyramid of Giza
+ancientMarkers.push(
+    createImageMarker(
+        [31.1342, 29.9792],
+        popup8_content,
+        'https://img.icons8.com/?size=48&id=15599&format=png',
+        'Pyramid of Giza'
+    )
+);
+
+
+// Marker 9 - Hanging Gardens of Babylon
+ancientMarkers.push(
+    createImageMarker(
+        [44.42, 32.5364],
+        popup9_content,
+        'https://img.icons8.com/?size=48&id=yd4mReUJEvkX&format=png',
+        'Hanging Gardens of Babylon'
+    )
+);
+
+// Marker 10 - Statue of Zeus at Olympia
+ancientMarkers.push(
+    createImageMarker(
+        [21.63, 37.6386],
+        popup10_content,
+        'https://img.icons8.com/?size=80&id=FvwAa8qWURNx&format=png',
+        'Statue of Zeus at Olympia'
+    )
+);
+
+// Marker 11 - Temple of Artemis
+ancientMarkers.push(
+    createImageMarker(
+        [27.3639, 37.9497],
+        popup11_content,
+        'https://img.icons8.com/?size=80&id=cjko3p00O0u2&format=png',
+        'Temple of Artemis'
+    )
+);
+
+// Marker 12 - Mausoleum at Halicarnassus
+ancientMarkers.push(
+    createImageMarker(
+        [27.4241, 37.0379],
+        popup12_content,
+        'https://img.icons8.com/?size=80&id=jF7V3Keh53bu&format=png',
+        'Mausoleum at Halicarnassus'
+    )
+);
+
+// Marker 13 - Lighthouse of Alexandria
+ancientMarkers.push(
+    createImageMarker(
+        [29.8853, 31.2135],
+        popup13_content,
+        'https://img.icons8.com/?size=48&id=13787&format=png',
+        'Lighthouse of Alexandria'
+    )
+);
+
+// Marker 14 - Colossus of Rhodes
+ancientMarkers.push(
+    createImageMarker(
+        [28.2278, 36.4511],
+        popup14_content,
+        'https://img.icons8.com/?size=80&id=UL6WhiOMp48x&format=png',
+        'Colossus of Rhodes'
+    )
+);
+
+// FOG EFFECT
+map.on('style.load', () => {
+
+    map.setFog({
+        color: '#666361',
+        'high-color': '#666361',
+        'space-color': '#2b2b2b',
+        'star-intensity': 0.15
+    });
+
+});
+
+document.getElementById('ancientToggle').addEventListener('change', function (e) {
+    ancientMarkers.forEach(marker => {
+        if (e.target.checked) {
+            marker.addTo(map);
+        } else {
+            marker.remove();
+        }
+    });
+});
+
+document.getElementById('modernToggle').addEventListener('change', function (e) {
+    modernMarkers.forEach(marker => {
+        if (e.target.checked) {
+            marker.addTo(map);
+        } else {
+            marker.remove();
+        }
+    });
+});
+
+</script>
+
+</body>
+
+</html>
